@@ -1,0 +1,21 @@
+{
+  "extends": [
+    "@zattoo",
+    "@zattoo/eslint-config/rules/jest",
+    "@zattoo/eslint-config/rules/jsdoc",
+    "@zattoo/eslint-config/rules/typescript"
+  ],
+  "env": {
+    "cypress/globals": true
+  },
+  "ignorePatterns": [
+    "node_modules",
+    "lib",
+    "examples"
+  ],
+  "plugins": ["cypress"],
+  "rules": {
+    "node/no-sync": "off",
+    "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+  }
+}

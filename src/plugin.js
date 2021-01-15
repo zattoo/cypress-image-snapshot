@@ -6,133 +6,166 @@
  */
 
 import fs from 'fs-extra';
-import { diffImageToSnapshot } from 'jest-image-snapshot/src/diff-snapshot';
+// @ts-ignore
+import {diffImageToSnapshot} from 'jest-image-snapshot/src/diff-snapshot';
 import path from 'path';
 import pkgDir from 'pkg-dir';
-import { MATCH, RECORD } from './constants';
 
+import {
+    MATCH,
+    RECORD,
+} from './constants';
+
+/** @type {MatchOptions} */
 let snapshotOptions = {};
-let snapshotResult = {};
+/** @type {SnapshotResults} */
+let snapshotResult;
 let snapshotRunning = false;
 const kebabSnap = '-snap.png';
 const dotSnap = '.snap.png';
 const dotDiff = '.diff.png';
 
 export const cachePath = path.join(
-  pkgDir.sync(process.cwd()),
-  'cypress',
-  '.snapshot-report'
+    pkgDir.sync(process.cwd()),
+    'cypress',
+    '.snapshot-report',
 );
 
-export function matchImageSnapshotOptions() {
-  return (options = {}) => {
-    snapshotOptions = options;
-    snapshotRunning = true;
-    return null;
-  };
-}
+/**
+ * @param {Cypress.PluginConfigOptions} _config
+ */
+export const matchImageSnapshotOptions = (_config) => {
+    return (/** @type {MatchOptions} */ options = {}) => {
+        snapshotOptions = options;
+        snapshotRunning = true;
+    };
+};
 
-export function matchImageSnapshotResult() {
-  return () => {
-    snapshotRunning = false;
+/**
+ * @param {Cypress.PluginConfigOptions} _config
+ */
+export const matchImageSnapshotResult = (_config) => {
+    return () => {
+        snapshotRunning = false;
 
-    const { pass, added, updated } = snapshotResult;
+        const {
+            pass,
+            added,
+            updated,
+        } = snapshotResult;
 
-    // @todo is there a less expensive way to share state between test and reporter?
-    if (!pass && !added && !updated && fs.existsSync(cachePath)) {
-      const cache = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
-      cache.push(snapshotResult);
-      fs.writeFileSync(cachePath, JSON.stringify(cache), 'utf8');
+        // @todo is there a less expensive way to share state between test and reporter?
+        if (!pass && !added && !updated && fs.existsSync(cachePath)) {
+            const cache = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+            cache.push(snapshotResult);
+            fs.writeFileSync(cachePath, JSON.stringify(cache), 'utf8');
+        }
+
+        return snapshotResult;
+    };
+};
+
+/**
+ *
+ * @param {{path: string}} data
+ */
+export const matchImageSnapshotPlugin = ({path: screenshotPath}) => {
+    if (!snapshotRunning) {
+        return null;
     }
 
-    return snapshotResult;
-  };
-}
+    const {
+        screenshotsFolder,
+        updateSnapshots,
+        options: {
+            failureThreshold = 0,
+            failureThresholdType = 'pixel',
+            ...options
+        } = {},
+    } = snapshotOptions;
 
-export function matchImageSnapshotPlugin({ path: screenshotPath }) {
-  if (!snapshotRunning) {
-    return null;
-  }
+    const receivedImageBuffer = fs.readFileSync(screenshotPath);
+    fs.removeSync(screenshotPath);
 
-  const {
-    screenshotsFolder,
-    updateSnapshots,
-    options: {
-      failureThreshold = 0,
-      failureThresholdType = 'pixel',
-      customSnapshotsDir,
-      customDiffDir,
-      ...options
-    } = {},
-  } = snapshotOptions;
+    const {
+        dir: screenshotDir, name,
+    } = path.parse(
+        screenshotPath,
+    );
 
-  const receivedImageBuffer = fs.readFileSync(screenshotPath);
-  fs.removeSync(screenshotPath);
+    // remove the cypress v5+ native retries suffix from the file name
+    const snapshotIdentifier = name.replace(/ \(attempt [0-9]+\)/, '');
 
-  const { dir: screenshotDir, name: snapshotIdentifier } = path.parse(
-    screenshotPath
-  );
+    const relativePath = path.relative(screenshotsFolder, screenshotDir);
+    const snapshotsDir = options.customSnapshotsDir
+        ? path.join(process.cwd(), options.customSnapshotsDir, relativePath)
+        : path.join(screenshotsFolder, '..', 'snapshots', relativePath);
 
-  const relativePath = path.relative(screenshotsFolder, screenshotDir);
-  const snapshotsDir = customSnapshotsDir
-    ? path.join(process.cwd(), customSnapshotsDir, relativePath)
-    : path.join(screenshotsFolder, '..', 'snapshots', relativePath);
+    const snapshotKebabPath = path.join(snapshotsDir, `${snapshotIdentifier}${kebabSnap}`);
+    const snapshotDotPath = path.join(snapshotsDir, `${snapshotIdentifier}${dotSnap}`);
 
-  const snapshotKebabPath = path.join(
-    snapshotsDir,
-    `${snapshotIdentifier}${kebabSnap}`
-  );
-  const snapshotDotPath = path.join(
-    snapshotsDir,
-    `${snapshotIdentifier}${dotSnap}`
-  );
+    const diffDir = options.customDiffDir
+        ? path.join(process.cwd(), options.customDiffDir, relativePath)
+        : path.join(snapshotsDir, '__diff_output__');
+    const diffDotPath = path.join(diffDir, `${snapshotIdentifier}${dotDiff}`);
 
-  const diffDir = customDiffDir
-    ? path.join(process.cwd(), customDiffDir, relativePath)
-    : path.join(snapshotsDir, '__diff_output__');
-  const diffDotPath = path.join(diffDir, `${snapshotIdentifier}${dotDiff}`);
+    if (fs.pathExistsSync(snapshotDotPath)) {
+        fs.copySync(snapshotDotPath, snapshotKebabPath);
+    }
 
-  if (fs.pathExistsSync(snapshotDotPath)) {
-    fs.copySync(snapshotDotPath, snapshotKebabPath);
-  }
+    snapshotResult = diffImageToSnapshot({
+        snapshotsDir,
+        diffDir,
+        receivedImageBuffer,
+        snapshotIdentifier,
+        failureThreshold,
+        failureThresholdType,
+        updateSnapshot: updateSnapshots,
+        ...options,
+    });
 
-  snapshotResult = diffImageToSnapshot({
-    snapshotsDir,
-    diffDir,
-    receivedImageBuffer,
-    snapshotIdentifier,
-    failureThreshold,
-    failureThresholdType,
-    updateSnapshot: updateSnapshots,
-    ...options,
-  });
+    const {
+        pass,
+        added,
+        updated,
+        diffOutputPath,
+    } = snapshotResult;
 
-  const { pass, added, updated, diffOutputPath } = snapshotResult;
+    if (!pass && !added && !updated) {
+        fs.copySync(diffOutputPath, diffDotPath);
+        fs.removeSync(diffOutputPath);
+        fs.removeSync(snapshotKebabPath);
+        snapshotResult.diffOutputPath = diffDotPath;
 
-  if (!pass && !added && !updated) {
-    fs.copySync(diffOutputPath, diffDotPath);
-    fs.removeSync(diffOutputPath);
+        return {
+            path: diffDotPath,
+        };
+    }
+
+    fs.copySync(snapshotKebabPath, snapshotDotPath);
     fs.removeSync(snapshotKebabPath);
-    snapshotResult.diffOutputPath = diffDotPath;
+    snapshotResult.diffOutputPath = snapshotDotPath;
 
     return {
-      path: diffDotPath,
+        path: snapshotDotPath,
     };
-  }
+};
 
-  fs.copySync(snapshotKebabPath, snapshotDotPath);
-  fs.removeSync(snapshotKebabPath);
-  snapshotResult.diffOutputPath = snapshotDotPath;
+/**
+ *
+ * @param {Cypress.PluginEvents} on
+ * @param {Cypress.PluginConfigOptions} _config
+ */
+export const addMatchImageSnapshotPlugin = (on, _config) => {
+    on('task', {
+        [MATCH]: matchImageSnapshotOptions(_config),
+        [RECORD]: matchImageSnapshotResult(_config),
+    });
+    on('after:screenshot', matchImageSnapshotPlugin);
+};
 
-  return {
-    path: snapshotDotPath,
-  };
-}
+/** @typedef {import('./interfaces').Options} Options */
+/** @typedef {import('./interfaces').SnapshotResults} SnapshotResults */
+/** @typedef {import('./interfaces').MatchOptions} MatchOptions */
 
-export function addMatchImageSnapshotPlugin(on, config) {
-  on('task', {
-    [MATCH]: matchImageSnapshotOptions(config),
-    [RECORD]: matchImageSnapshotResult(config),
-  });
-  on('after:screenshot', matchImageSnapshotPlugin);
-}
+/** @typedef {Options & Cypress.PluginConfigOptions} PluginOptions */

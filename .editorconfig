@@ -1,0 +1,17 @@
+# see https://editorconfig.org
+# candidate for shared package
+
+root = true
+
+[*]
+indent_style = space
+charset = utf-8
+trim_trailing_whitespace = true
+end_of_line = lf
+insert_final_newline = true
+
+[*.{html,ejs,yml,*css}]
+indent_size = 2
+
+[*.{js,jsx,ts,json}]
+indent_size = 4

@@ -1,0 +1,28 @@
+{
+    "include": ["src/*"],
+    "compilerOptions": {
+        "outDir": "./lib",
+        "types": ["cypress"],
+        "lib": ["es2018"],
+        "module": "commonjs",
+        "target": "es2018",
+        "resolveJsonModule": false,
+        "allowSyntheticDefaultImports": true,
+        "preserveSymlinks": true,
+        "allowJs": true,
+        "checkJs": true,
+        "skipLibCheck": true,
+        "noEmitOnError": true,
+        "declaration": true,
+        "declarationMap": true,
+        "strict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noImplicitAny": true,
+        "noImplicitReturns": true,
+        "strictNullChecks": false
+    },
+    "exclude": [
+        "src/reporter.js",
+    ]
+}

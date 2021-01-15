@@ -1,0 +1,9 @@
+{
+  "testPathIgnorePatterns": [
+    "<rootDir>/examples/",
+    "<rootDir>/node_modules/"
+  ],
+  "setupFiles": [
+    "./config/jest/setup-file.js"
+  ]
+}

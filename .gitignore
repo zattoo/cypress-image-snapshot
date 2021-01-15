@@ -1,4 +1,7 @@
-node_modules
+.idea/
+node_modules/
+lib/
+.tmp/
 /*.js
 
 .DS_Store
