@@ -15,9 +15,9 @@ const updateSnapshots = Cypress.env('updateSnapshots') || false;
 const failOnSnapshotDiff = typeof Cypress.env('failOnSnapshotDiff') === 'undefined';
 
 /**
- * @param {SnapshotOptions} [defaultOptions]
+ * @param {SnapshotOptions} defaultOptions
  */
-export const matchImageSnapshotCommand = (defaultOptions) => {
+export const matchImageSnapshotCommand = (defaultOptions = {}) => {
     /**
      * @param {Cypress.PrevSubject} subject
      * @param {string | SnapshotOptions} [maybeName]

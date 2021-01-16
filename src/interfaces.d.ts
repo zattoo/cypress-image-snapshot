@@ -2,7 +2,7 @@
 
 import {MatchImageSnapshotOptions} from 'jest-image-snapshot';
 
-type Options = Partial<Cypress.Loggable & Cypress.Timeoutable & Cypress.ScreenshotOptions> & MatchImageSnapshotOptions;
+type Options = Partial<Cypress.ScreenshotOptions> & MatchImageSnapshotOptions;
 
 export interface SnapshotOptions extends Options {
     customSnapshotsDir?: string;

@@ -5,11 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import fs from 'fs-extra';
-// @ts-ignore
+import * as fs from 'fs-extra';
 import {diffImageToSnapshot} from 'jest-image-snapshot/src/diff-snapshot';
-import path from 'path';
-import pkgDir from 'pkg-dir';
+import * as path from 'path';
+import * as pkgDir from 'pkg-dir';
 
 import {
     MATCH,
@@ -35,9 +34,13 @@ export const cachePath = path.join(
  * @param {Cypress.PluginConfigOptions} _config
  */
 export const matchImageSnapshotOptions = (_config) => {
+    // @ts-ignore
     return (/** @type {MatchOptions} */ options = {}) => {
         snapshotOptions = options;
         snapshotRunning = true;
+        // You must return a value, null, or a promise that resolves to
+        // a value or null to indicate that the task was handled.
+        return null;
     };
 };
 

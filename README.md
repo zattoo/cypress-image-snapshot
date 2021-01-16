@@ -175,6 +175,19 @@ addMatchImageSnapshotCommand({
 });
 ```
 
+## Types
+
+`@zattoo/cypres-image-snapshot` is a type safe module.
+If you're using typings in your project then you will need to add the follow to your cypress project
+```typescript
+// @file cypress/index.d.ts
+
+import '@zattoo/cypress-image-snapshot';
+```
+
+Please notice, if you're changing the name of the function from `matchImageSnapshot` to something else, you will have to create the definition by yourself.
+Therefore, it is not recommended changing the name of the function.
+
 ## How it works
 
 We really enjoy the diffing workflow of jest-image-snapshot and wanted to have a similar workflow when using Cypress. Because of this, under the hood we use some of jest-image-snapshot's internals and simply bind them to Cypress's commands and plugins APIs.
