@@ -9,7 +9,6 @@
         "allowJs": true,
         "checkJs": true,
         "skipLibCheck": true,
-        "emitDeclarationOnly": true
     },
     "exclude": [
         "src/reporter.js",

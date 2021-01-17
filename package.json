@@ -20,15 +20,16 @@
             "url": "https://github.com/nitzanashi"
         }
     ],
-    "main": "lib/index.js",
+    "files": [
+        "src/",
+        "lib/",
+        "*.d.ts"
+    ],
+    "main": "index.d.ts",
     "types": "index.d.ts",
-    "type": "module",
     "license": "MIT",
-    "engines": {
-        "node": ">=10"
-    },
     "scripts": {
-        "build:copy": "node scripts/copy-src.js",
+        "build:copy": "node scripts/copy-src.mjs",
         "build:ts": "tsc --build --verbose  --pretty",
         "build": "npm run build:copy && npm run build:ts",
         "test:lint": "eslint . --ext .js --cache --cache-location ./.tmp/.eslintcache",
@@ -37,7 +38,7 @@
     },
     "dependencies": {
         "chalk": "4.1.0",
-        "cypress": "^5.0.0 || ^6.0.0",
+        "cypress": "^5.x || ^6.x",
         "fs-extra": "9.0.1",
         "glob": "7.1.6",
         "jest-image-snapshot": "4.3.0",
